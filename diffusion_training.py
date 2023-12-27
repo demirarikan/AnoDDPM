@@ -7,10 +7,11 @@ from random import seed
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
+plt.rcParams['animation.ffmpeg_path'] = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
 from torch import optim
 
 import dataset
-import evaluation
+# import evaluation
 from GaussianDiffusion import GaussianDiffusionModel, get_beta_schedule
 from helpers import *
 from UNet import UNetModel, update_ema_params
@@ -150,7 +151,7 @@ def train(training_dataset_loader, testing_dataset_loader, args, resume):
 
     save(unet=model, args=args, optimiser=optimiser, final=True, ema=ema)
 
-    evaluation.testing(testing_dataset_loader, diffusion, ema=ema, args=args, model=model)
+    # evaluation.testing(testing_dataset_loader, diffusion, ema=ema, args=args, model=model)
 
 
 def save(final, unet, optimiser, args, ema, loss=0, epoch=0):
@@ -352,6 +353,11 @@ def main():
                     )
         training_dataset_loader = dataset.init_dataset_loader(training_dataset, args)
         testing_dataset_loader = dataset.init_dataset_loader(testing_dataset, args)
+    elif args["dataset"].lower() == "custom":
+        training_dataset_loader = dataset.get_train_dataloader(split_dir=args['split_dir'], target_size=args['img_size'],
+                                                               batch_size=args['Batch_Size'], validation=False)
+        testing_dataset_loader = dataset.get_all_test_dataloaders(split_dir=args['split_dir'], target_size=args['img_size'],
+                                                                  batch_size=args['Batch_Size'])
     else:
         # load NFBS dataset
         training_dataset, testing_dataset = dataset.init_datasets(ROOT_DIR, args)
