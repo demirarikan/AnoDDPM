@@ -946,7 +946,11 @@ class TestDataset(Dataset):
         neg_mask = neg_mask.resize(self.target_size, Image.NEAREST)
         neg_mask = transforms.ToTensor()(neg_mask)
 
-        return img, pos_mask, neg_mask
+        return {
+            'image': img,
+            'pos_mask': pos_mask,
+            'neg_mask': neg_mask
+        }
 
 
 def get_train_dataloader(split_dir: str, target_size: Tuple[int, int], batch_size: int, validation=False):

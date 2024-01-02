@@ -20,6 +20,75 @@ torch.cuda.empty_cache()
 
 ROOT_DIR = "./"
 
+def detect_anomaly(test_dataloader_dict, device):
+    sys.argv.append("6000")
+    args_simplex, output_simplex = load_parameters(device)
+
+    unet_simplex = UNetModel(
+            args_simplex['img_size'][0], args_simplex['base_channels'], channel_mults=args_simplex['channel_mults']
+            )
+    
+    betas = get_beta_schedule(args_simplex['T'], args_simplex['beta_schedule'])
+
+    diff_simplex = GaussianDiffusionModel(
+            args_simplex['img_size'], betas, loss_weight=args_simplex['loss_weight'],
+            loss_type=args_simplex['loss-type'], noise=args_simplex["noise_fn"]
+            )
+    
+    unet_simplex.load_state_dict(output_simplex["ema"])
+    unet_simplex.eval()
+    unet_simplex.to(device)
+
+    t_distance=250
+
+    absent_septum_dataset = test_dataloader_dict["absent_septum"]
+    img = next(absent_septum_dataset)["image"]
+    img = img.to(device)
+
+    # returns 500 length list for every step of the diffusion process
+    output = diff_simplex.forward_backward(
+                    unet_simplex, img,
+                    see_whole_sequence="whole",
+                    t_distance=t_distance, denoise_fn=args_simplex["noise_fn"]
+                    )
+    
+    # take mse of output and img
+    mse = (img.cpu() - output[-1]) ** 2
+    # threshold 0.5 like used in the paper
+    threshold = 0.5
+    # if mse is greater than threshold, it is an anomaly
+    anomaly_map = mse > threshold
+    result = {
+        'reconstruction': output[-1],
+        'anomaly_map': anomaly_map,
+        }
+    
+    return result
+
+
+
+
+    # for dataset_key in test_dataloader_dict.keys():
+    #     dataset = test_dataloader_dict[dataset_key]
+    #     print(f"Testing on {dataset_key}")
+    #     test_metrics = {
+    #         'L1': [],
+    #         'LPIPS': [],
+    #         'SSIM': [],
+    #         'TP': [],
+    #         'FP': [],
+    #         'Precision': [],
+    #         'Recall': [],
+    #         'F1': [],
+    #     }
+        
+
+
+
+
+
+
+
 
 def train(training_dataset_loader, testing_dataset_loader, args, resume):
     """
@@ -396,4 +465,7 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     seed(1)
 
-    main()
+    # main()
+    test_dataloader_dict = dataset.get_all_test_dataloaders(r'C:\Users\dmrar\Desktop\WS23-24\unsupervised anomaly detection\AnoDDPM\data\splits', (128, 128), 1)
+
+    test(test_dataloader_dict, device)
