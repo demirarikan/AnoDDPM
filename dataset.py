@@ -1038,19 +1038,24 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import helpers
 
-    d_set = MVTec(
-        './DATASETS/leather', True, img_size=(256, 256), rgb=False
-    )
-    # d_set = AnomalousMRIDataset(
-    #         ROOT_DIR='./DATASETS/CancerousDataset/EdinburghDataset/Anomalous-T1', img_size=(256, 256),
-    #         slice_selection="iterateKnown_restricted", resized=False
-    #         )
-    loader = init_dataset_loader(d_set, {"Batch_Size": 16})
+    # d_set = MVTec(
+    #     './DATASETS/leather', True, img_size=(256, 256), rgb=False
+    # )
+    # # d_set = AnomalousMRIDataset(
+    # #         ROOT_DIR='./DATASETS/CancerousDataset/EdinburghDataset/Anomalous-T1', img_size=(256, 256),
+    # #         slice_selection="iterateKnown_restricted", resized=False
+    # #         )
+    # loader = init_dataset_loader(d_set, {"Batch_Size": 16})
 
-    for i in range(4):
-        new = next(loader)
-        plt.imshow(helpers.gridify_output(new["image"], 4), cmap="gray")
-        plt.show()
-        plt.imshow(helpers.gridify_output(new["mask"], 4), cmap="gray")
-        plt.show()
-        plt.pause(1)
+    # for i in range(4):
+    #     new = next(loader)
+    #     plt.imshow(helpers.gridify_output(new["image"], 4), cmap="gray")
+    #     plt.show()
+    #     plt.imshow(helpers.gridify_output(new["mask"], 4), cmap="gray")
+    #     plt.show()
+    #     plt.pause(1)
+
+    test_dataloader = get_train_dataloader("D:\\Desktop\\demir\\AnoDDPM\\data\\splits", (128, 128), 1, False)
+    data = next(iter(test_dataloader))
+    print(data.shape)
+
